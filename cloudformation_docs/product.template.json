@@ -1,0 +1,152 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Enable Guard Duty for every region in your account
+
+Parameters:
+  AssumableOrgRoleArn:
+    Type: String
+  TargetOU:
+    Type: String
+  SpokeIAMPath:
+    Type: String
+    Default: /guardduty-enabler/
+  SpokeIAMRole:
+    Type: String
+    Default: EnablerFunctionRole
+  ScheduleExpression:
+    Type: String
+    Default: None
+    Description: Cron or rate expressions to pass through to an AWS::Events::Rule
+
+Conditions:
+  NeedsScheduling: !Not [!Equals [!Ref ScheduleExpression, None ]]
+
+Resources:
+  EnablerFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /guardduty-enabler/
+      Policies:
+        - PolicyName: ServiceCatalogActions
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource: arn:aws:iam::*:role/guardduty-enabler/EnablerFunctionRole
+              - Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource: !Ref AssumableOrgRoleArn
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+        - arn:aws:iam::aws:policy/AmazonGuardDutyFullAccess
+
+  EnablerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.7
+      Handler: index.handler
+      CodeUri: ./deploy
+      Timeout: 900
+      Role: !GetAtt EnablerFunctionRole.Arn
+      Environment:
+        Variables:
+          ASSUMABLE_ORG_ROLE_ARN: !Ref AssumableOrgRoleArn
+          SPOKE_IAM_PATH: !Ref SpokeIAMPath
+          SPOKE_IAM_ROLE: !Ref SpokeIAMRole
+
+  EnablerFunctionCallerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /guardduty-enabler/
+      Policies:
+        - PolicyName: NeededActions
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt EnablerFunction.Arn
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+
+  EnablerFunctionCusomResource:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.7
+      Handler: index.handler_custom_resource
+      CodeUri: ./deploy
+      Timeout: 900
+      Role: !GetAtt EnablerFunctionCallerRole.Arn
+      Environment:
+        Variables:
+          TARGET_OU: !Ref TargetOU
+
+  EnablerFunctionScheduler:
+    Type: AWS::Serverless::Function
+    Condition: NeedsScheduling
+    Properties:
+      Runtime: python3.7
+      Handler: index.handler_scheduler
+      CodeUri: ./deploy
+      Timeout: 900
+      Role: !GetAtt EnablerFunctionCallerRole.Arn
+      Environment:
+        Variables:
+          TARGET_OU: !Ref TargetOU
+
+  SchedulingRule:
+    Type: AWS::Events::Rule
+    Condition: NeedsScheduling
+    Properties:
+      Description: !Sub "Invites and add members from ${TargetOU} to the GuardDuty master"
+      ScheduleExpression: !Ref ScheduleExpression
+      Targets:
+        - Arn: !GetAtt EnablerFunctionScheduler.Arn
+          Id: !Ref EnablerFunctionScheduler
+
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Description: PermissionForEventsToInvokeLambda is a lovely lambda
+    Properties:
+      FunctionName: !Ref EnablerFunctionScheduler
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt SchedulingRule.Arn
+
+  Enable:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt EnablerFunctionCusomResource.Arn
+      AssumableOrgRoleArn: !Ref AssumableOrgRoleArn
+      TargetOU: !Ref TargetOU
+      SpokeIAMPath: !Ref SpokeIAMPath
+      SpokeIAMRole: !Ref SpokeIAMRole
+
+
+Outputs:
+  PermissionForEventsToInvokeLambda:
+    Description: Some description about PermissionForEventsToInvokeLambda
+    Value: Value to return
+    Export:
+      Name: PermissionForEventsToInvokeLambdaExportedName
