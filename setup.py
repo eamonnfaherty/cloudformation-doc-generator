@@ -24,7 +24,7 @@ setuptools.setup(
         ]},
     install_requires=[
         'click',
-        'Jinja2',
+        'Jinja2>=2.10.1',
         'cfn_flip',
     ],
 )
