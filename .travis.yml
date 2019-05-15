@@ -1,0 +1,22 @@
+git:
+  depth: 1
+language: python
+python:
+- '3.6'
+install:
+- pip install -r cloudformation_docs/requirements.txt
+- pip install .
+before_deploy:
+- python setup.py sdist
+deploy:
+  - provider: pypi
+    skip_cleanup: true
+    distributions: sdist bdist_wheel
+    on:
+      tags: true
+      repo: eamonnfaherty/cloudformation-doc-generator
+      all_branches: true
+    user:
+      secure: OhYTrsGDPjJn8WLOshmsuhz0cIM20m0ZbidbbbiusbI8t3l6F7fw1XoU27HEB39/+ZjIR72FC7Xfa1XfSc43HKBDMIvIUa4pRDpAAGh9c548MGPbl1BhtTzZRFnm/o+2SYMBrT2qt10/0TgWZ7PsBO6cubM6qSJCJAZzBI6FJDzDUsjnwEm9eR2O8iJLSspkEyZu0RiMqPU4SNleV2NPL4D6Wo6ZOz+ZooKQTGGwIXsx+Lw+gKiicQ4272Ew6TMB+0+CQCesk8vHXS7kMxOOmegCYAw+SQyJOG3J3PB3WB7PP6SwBbrjB2IJ+7LbYgX4aCRDZAe8SrZ2Hn+oZLzAbg28BG1wV0MVIcPXhro9de5XPc+VdLP1Uzz+P5gjZrzcJnk6Rzp5zWhU8gzl0vkZqhSqMLkxBIUExkEdEtIWpjG9Pcq7q0uiiJyZlM7/5W1JTpbS2//gG23ZoE2Gzpmsgu0y0lT33fvG/TeJV53SdDA3yJHU0QbEC+0rtT2mWz9Aq3Y2PHpRNeFkzZ0O5CKi1qorv8TULulZPaXeTFLowAOCIohrzItoW8lG6AMpLVQNbRoLw0Ucz4ALaz7gN/Mr8+E4Lp5v+FL1Zvv3uir7dYkuDr998OnTDlIfiHbe4bqP4r4BIXPHM6HtYKdPZpNRDYgMVAH4mqq/+fzhz5yGr+U=
+    password:
+      secure: RkMk1MIDWITnH7ayCC26ixvexNYdqcLoeA22KZWdaYHLA7x3ea9Q2sPhe9YgIU5WfA5ikWygpYHefSQaMrkXh/zpkvbwBU5zqEsJS308jyADeSuZNHmlHyHE00GwtYsz6a02/JI95pLMbhivg02o1mIjYQeGCC2EYCJ1KDqUtLqjx1QaDLUOU9UUHTTG86lAxgganeLVAqDRU8Zq0vTiw7ld3VWpoLG6ZVzD7lOSzr9JzR32OBoAQpYQqrPnLYKtwm0RtQ3QO1xILnEcuF20oOAoORkWOgZ/5gl5n0G67qcn7gWi7s6xveqx1A2eesHICIZZ6eZd1RVRmbMZJkHRxklMvkIGvYr40GprGsKv+6gA6EH4kyPjZJxVGUUl/+/OaYb6mTuStbCRLA/T4+4J+aZljkHO9iVlsHyI0bRS8RCGOdKWq0NeM0v6wzbSgv1uNPrSPXfiAkQ/iibW0Z2gvBR96JD+8FWkqQG/MSR0c8Ufk3mio8EMe+7xBe9DtZQzzBpCk9/cqB9gF+/PUMbKvv8LdKoQNSNltM9PCIfzgnU7c5G9tyKFWY4EjDy8np5Obg+hAUoKcPdPbcABxt3JmpTXuGa+7pDF0PvWjSM/wQIEjmDYa6Sv6Yo2q7rXVqHIVFrxQVp4YnjnWopLyxjcg+zXr7sNzyPXElZmiE7bFKE=
