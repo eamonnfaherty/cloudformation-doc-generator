@@ -8,6 +8,8 @@ install:
 - pip install .
 before_deploy:
 - python setup.py sdist
+script:
+  echo "hello world"
 deploy:
   - provider: pypi
     skip_cleanup: true
