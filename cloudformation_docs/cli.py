@@ -67,7 +67,7 @@ Description: {{ resources[resource].Description}}{% endif %} {% endfor %}
 The list of outputs this template exposes:
 {% for output in outputs %}
 ### {{ output }} 
-{% if outputs[output].Description %}Description: {{ outputs[output].Description}}{% endif %}{% if outputs[output].Export.Name %} 
+{% if outputs[output].Description %}Description: {{ outputs[output].Description}}{% endif %}{% if outputs[output].Export %} 
 Export name: {{ outputs[output].Export.Name }}{% endif %}  
 {% endfor %}
 """
