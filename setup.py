@@ -8,7 +8,7 @@ with open("cloudformation_docs/requirements.txt", "r") as fh:
 
 setuptools.setup(
     name="cloudformation-docs",
-    version="0.1.1",
+    version="0.2.0",
     author="Eamonn Faherty",
     author_email="packages@designandsolve.co.uk",
     description="Generate docs from cloudformation templates",
